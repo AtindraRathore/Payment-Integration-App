@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Map</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Include Bootstrap JavaScript and Popper.js via CDN -->
+   <style>
+       *{
+         margin:0px;
+         padding:0px;
+       }
+      body{
+      overflow-x: hidden;
+      }
+       nav>ul>li{
+        text-decoration: none;
+        list-style-type: none;
+        margin-inline: 5vw;
+        display:inline;
+       }
+      /* CSS for default styles */
+
+/* Media query for smartphones */
+@media only screen and (max-width: 767px) {
+  /* CSS for smartphones */
+  body{
+    overflow-x: hidden;
+    display:flex;
+  }
+  nav{
+    flex-wrap: wrap;
+  }
+ #main>img{
+    width:767px;
+ }
+ #content{
+    flex-wrap: wrap;
+ }
+ #footer{
+  flex-wrap: wrap;
+ }
+}
+  footer{
+    background-color:gray;
+    text-align: center;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    color:white;
+  }
+   </style>
+</head>
+<body>
+   <nav class="navbar navbar-expand-md navbar-dark bg-light">
+       <ul>
+        <li><img th:src="@{static/image/charity.png}" type="image/png" width="100px" height="80px" style="border-radius: 50%;" /></li>
+        <li><a>Home</a></li>
+           <li> <a>Services</a></li>
+            <li> <a>About-us</a></li>
+             <li><a>Log-in</a></li>
+       </ul>
+   </nav>
+   <div id="main">
+   
+     <img th:src="@{static/image/slide1.jpg}" alt="main-Image" width="1500vw" height="500px" >
+   </div>
+    
+        <div id="content" class="card" style="margin-top: 16rem !important;margin-bottom: 5rem !important;width:500px;margin-left: 34vw;margin-right:45vw;">
+            <div class="card-body">
+                <label class="my-3">Donate us</label>
+                <input id="payment-field" type="text" placeholder="Enter Amount" class="form-control" />
+       
+                <br>
+                <label class="my-3">Email-Id</label>
+                <input id="useremail" name="useremail" type="text"  placeholder="Enter Email-ID"  class="form-control"/>
+                <button type="button" onclick="paymentStart()" class="my-3 btn btn-primary">Pay</button>
+            </div>
+         </div>
+    <footer id="footer">Helping charitable Trust Copyright &copy 2023 All rights reserved</footer>
+   </body>
+<!--<script src="static/js/script.js"></script>-->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@7.12.15/dist/sweetalert2.all.min.js"></script>
+<script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+<script>
+ var amount = '';
+  var Payment_Id='';
+ function paymentStart(){
+    console.log("payment started");
+    var amount = document.getElementById('payment-field').value;
+    var uemail = document.getElementById('useremail').value;
+
+
+    console.log("this is "+amount);
+    if(amount == null || amount == ''){
+        swal("amount is required !!");
+        return;
+    }
+     $.ajax(
+         {
+          url:'/user/create_order?id=uemail',
+         data:JSON.stringify({amount:amount,info:'order_request'}),
+          contentType:'application/json',
+          type:'POST',
+        dataType:'json',
+         success:function(response){
+           console.log(response);
+           console.log("Success method");
+           var options = {
+    "key": 'rzp_test_i56NyuHJff8lqH',
+    "amount": response.amount,
+    "currency": "INR",
+    "order_id": response.id,
+    "name": "Atindra Corp",
+    "description": "Donation",
+    "image": "https://cdn.razorpay.com/logos/F9Yhfb7ZXjXmIQ_medium.jpg",
+    "handler": function (response){
+       Payment_Id = response.razorpay_payment_id;
+        console.log(response.razorpay_payment_id);
+        console.log(response.razorpay_order_id);
+        console.log(response.razorpay_signature);
+        alert("Payment Successfull, your payment Id is "+response.razorpay_payment_id);
+
+          var url = '/user/sendmail';
+  fetch(url, {
+    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    headers: {
+  "Content-Type": "application/json",
+<!--       'Content-Type': 'application/x-www-form-urlencoded',-->
+     },
+   body: JSON.stringify(uemail)
+ });
+
+
+    },
+    "prefill": {
+        "name": "",
+        "email": "",
+        "contact": ""
+    },
+    "notes": {
+        "address": "Razorpay Corporate Office"
+    },
+    "theme": {
+        "color": "#3399cc"
+    },
+
+};
+
+let rzp = new Razorpay(options);
+
+  rzp.on('payment.failed',function(response){
+  console.log(response.error.code);
+  console.log(response.error.description);
+   console.log(response.error.source);
+   console.log(response.error.reason);
+   console.log(response.error.metadata.payment_id);
+  swal("Oops! payment Failed");
+ })
+ rzp.open();
+           },
+           error:function(xhr,error,status){
+           console.log(xhr);
+            console.log(error);
+            console.log(status);
+           swal("something went wrong !!");
+           }
+
+       }
+
+    );
+
+
+
+}
+</script>
+
+
+</html>
